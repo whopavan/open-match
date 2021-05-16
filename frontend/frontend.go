@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"os"
 	"time"
 
 	"google.golang.org/grpc"
@@ -43,11 +44,12 @@ import (
 
 */
 
-var (
-	openMatchFrontendEndpoint = "192.168.49.2:30348"
-)
-
 func main() {
+	openMatchFrontendEndpoint, nv := os.LookupEnv("OPEN_MATCH_FRONTEND_ENDPOINT")
+	if !nv {
+		log.Fatalf("Open match env not set %v", nv)
+	}
+
 	// connect to "open match frontend"
 	conn, err := grpc.Dial(openMatchFrontendEndpoint, grpc.WithInsecure())
 	if err != nil {

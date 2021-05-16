@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: open-match-matchfunction
+  namespace: open-match
+  labels:
+    app: open-match
+    component: matchfunction
+spec:
+  containers:
+  - name: open-match-matchfunction
+    image: realpvn/open-match-function:latest
+    imagePullPolicy: "IfNotPresent"
+    ports:
+    - name: grpc
+      containerPort: 50502
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: open-match-matchfunction
+  namespace: "open-match"
+  annotations:
+    chart: open-match-1.2.0
+    heritage: Helm
+  labels:
+    app: open-match
+    component: matchfunction
+    release: open-match
+spec:
+  selector:
+    app: open-match
+    component: matchfunction
+    release: open-match
+  clusterIP: 10.96.0.107
+  type: LoadBalancer
+  ports:
+  - name: grpc
+    protocol: TCP
+    port: 50502
+    targetPort: 50502

@@ -1,0 +1,54 @@
+#!/bin/bash
+
+if [ "$1" == "-new" ]
+then
+    echo "Deleting old minikube data"
+    minikube delete
+
+    echo "Starting new minikube"
+    minikube start --cpus=3 --memory=2500mb
+    eval $(minikube docker-env)
+
+    echo "Starting open-match services"
+    kubectl apply --namespace open-match -f ./kuber/01-open-match-core.yaml
+    kubectl apply --namespace open-match -f ./kuber/06-open-match-override-configmap.yaml -f ./kuber/07-open-match-default-evaluator.yaml
+    
+    sleep 2
+
+    # Since its new pods they need time to initialise and start working
+    for((i=0; ;++i))
+    do
+        kubectl get pod -o wide -n open-match
+        read -p "Are servers running? (y|N)" resp
+        case "$resp" in
+            y|Y) break;;
+        esac
+        echo "waiting..."
+        sleep 5
+    done
+fi
+
+echo "Remove old env variables"
+sed -i '/OPEN_MATCH_QUERY_ENDPOINT/d' ~/.bashrc
+sed -i '/OPEN_MATCH_FRONTEND_ENDPOINT/d' ~/.bashrc
+sed -i '/OPEN_MATCH_BACKEND_ENDPOINT/d' ~/.bashrc
+sed -i '/OPEN_MATCH_MATCHFUNCTION_ENDPOINT/d' ~/.bashrc
+
+echo "Setting new env"
+query=`minikube service open-match-query --url -n open-match`
+frontend=`minikube service open-match-frontend --url -n open-match`
+backend=`minikube service open-match-backend --url -n open-match`
+matchFunction=`minikube service open-match-matchfunction --url -n open-match`
+
+query=`echo $query | cut -d " " -f1`
+frontend=`echo $frontend | cut -d " " -f1`
+backend=`echo $backend | cut -d " " -f1`
+matchFuntion=`echo $matchFunction | cut -d " " -f1`
+
+# we do ${var:7} to cut 7 characters at start of var i.e "http://"
+# so nice="pavanhello", echo ${nice:5} will print "hello"
+echo export OPEN_MATCH_QUERY_ENDPOINT=\"${query:7}\" >> ~/.bashrc
+echo export OPEN_MATCH_FRONTEND_ENDPOINT=\"${frontend:7}\" >> ~/.bashrc
+echo export OPEN_MATCH_BACKEND_ENDPOINT=\"${backend:7}\" >> ~/.bashrc
+echo export OPEN_MATCH_MATCHFUNCTION_ENDPOINT=\"${matchFunction:7}\" >> ~/.bashrc
+. ~/.bashrc
