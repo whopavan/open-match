@@ -1,15 +1,12 @@
 #!/bin/bash
 
-if [ "$1" == "-new" ]
+if [ "$1" == "--new" ]
 then
-    echo "Deleting old minikube data"
-    minikube delete
+    echo "Delete old open-match services/pods"
+    kubectl delete psp,clusterrole,clusterrolebinding --selector=release=open-match
+    kubectl delete namespace open-match
 
-    echo "Starting new minikube"
-    minikube start --cpus=3 --memory=2500mb
-    # eval $(minikube docker-env)
-
-    echo "Starting open-match services"
+    echo "Starting new open-match services"
     kubectl apply --namespace open-match -f ./kuber/01-open-match-core.yaml
     kubectl apply --namespace open-match -f ./kuber/06-open-match-override-configmap.yaml -f ./kuber/07-open-match-default-evaluator.yaml
     
