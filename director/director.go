@@ -52,10 +52,10 @@ func main() {
 	}
 	openMatchMMFHostPort, err := strconv.ParseInt(openMatchMMFHostPortStr, 10, 32)
 	if err != nil {
-		log.Fatalf("Parsing OPEN_MATCH_MATCHFUNCTION_HOSTPORT failed")
+		log.Fatalf("Parsing OPEN_MATCH_MATCHFUNCTION_HOSTPORT failed %v", err)
 	}
 
-	log.Printf("MMF host %s and port %d", openMatchMMFHostName, openMatchMMFHostPort)
+	log.Printf("MMF host %s port %d", openMatchMMFHostName, openMatchMMFHostPort)
 
 	matchesRequest := pb.FetchMatchesRequest{
 		Config: &pb.FunctionConfig{
@@ -74,12 +74,11 @@ func main() {
 
 	resp, err := stream.Recv()
 	if err == io.EOF {
-		log.Printf("EOF in resp")
+		log.Fatalf("EOF while getting response from stream")
 		return
 	}
-
 	if err != nil {
-		log.Fatalf("Pull match failed %v", err)
+		log.Fatalf("Fetch match for profile failed %v", err)
 	}
 
 	matchToAssign := resp.GetMatch()
@@ -88,15 +87,18 @@ func main() {
 	// assign matches
 	tickets := matchToAssign.GetTickets()
 
-	var ticketIDs []string
-	for i := range tickets {
-		ticketIDs[i] = tickets[i].Id
-	}
+	log.Printf("tickets %v", tickets)
+	log.Printf("tickets %v", len(tickets))
+
+	// var ticketIDs []string
+	// for i := range tickets {
+	// 	ticketIDs[i] = tickets[i].Id
+	// }
 
 	assignTicket := pb.AssignTicketsRequest{
 		Assignments: []*pb.AssignmentGroup{
 			{
-				TicketIds: ticketIDs,
+				TicketIds: []string{tickets[0].Id},
 				Assignment: &pb.Assignment{
 					// dummy connect ip address
 					Connection: "192.168.0.111:2222",

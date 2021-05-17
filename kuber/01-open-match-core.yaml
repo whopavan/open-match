@@ -578,9 +578,6 @@ data:
       swaggerui:
         hostname: "open-match-swaggerui"
         httpport: "51500"
-      matchfunction:
-        hostname: "open-match-matchfunction"
-        grpcport: "50510"
 
       # Configurations for api.test and api.scale are used for testing.
       test:
@@ -773,7 +770,7 @@ metadata:
     heritage: Helm
     app.kubernetes.io/component: "metrics"
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   
   
   ports:
@@ -796,7 +793,7 @@ metadata:
     release: open-match
     heritage: Helm
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   
   ports:
     - name: redis
@@ -840,13 +837,12 @@ spec:
     app: open-match
     component: backend
     release: open-match
-  clusterIP: 10.96.0.102
+  clusterIP: 10.96.0.110
   type: LoadBalancer
   ports:
   - name: grpc
     protocol: TCP
     port: 50505
-    targetPort: 50505
   - name: http
     protocol: TCP
     port: 51505
@@ -882,13 +878,12 @@ spec:
     app: open-match
     component: frontend
     release: open-match
-  clusterIP: 10.96.0.103
+  clusterIP: 10.96.0.111
   type: LoadBalancer
   ports:
   - name: grpc
     protocol: TCP
     port: 50504
-    targetPort: 50504
   - name: http
     protocol: TCP
     port: 51504
@@ -924,7 +919,7 @@ spec:
     app: open-match
     component: query
     release: open-match
-  clusterIP: 10.96.0.104
+  clusterIP: 10.96.0.112
   type: LoadBalancer
   ports:
   - name: grpc
@@ -964,37 +959,11 @@ spec:
   selector:
     app: open-match
     component: swaggerui
-  type: LoadBalancer
+  type: ClusterIP
   ports:
   - name: http
     protocol: TCP
     port: 51500
----
-# custom match maker function
-apiVersion: v1
-kind: Service
-metadata:
-  name: open-match-matchfunction
-  namespace: "open-match"
-  annotations:
-    chart: open-match-1.2.0
-    heritage: Helm
-  labels:
-    app: open-match
-    component: matchfunction
-    release: open-match
-spec:
-  selector:
-    app: open-match
-    component: matchfunction
-    release: open-match
-  clusterIP: 10.96.0.110
-  type: LoadBalancer
-  ports:
-  - name: grpc
-    protocol: TCP
-    port: 50510
-    targetPort: 50510
 ---
 # Source: open-match/templates/synchronizer.yaml
 # Copyright 2019 Google LLC
@@ -1027,7 +996,7 @@ spec:
     app: open-match
     component: synchronizer
     release: open-match
-  type: LoadBalancer
+  type: ClusterIP
   ports:
   - name: grpc
     protocol: TCP
@@ -1451,88 +1420,6 @@ spec:
           periodSeconds: 10
           failureThreshold: 2
 ---
-# custom match function service
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: open-match-matchfunction
-  namespace: open-match
-  annotations:
-    chart: open-match-1.2.0
-    heritage: Helm
-  labels:
-    app: open-match
-    component: matchfunction
-    release: open-match
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: open-match
-      component: matchfunction
-  template:
-    metadata:
-      namespace: open-match
-      annotations:
-        chart: open-match-1.2.0
-        heritage: Helm
-        
-      labels:
-        app: open-match
-        component: matchfunction
-        release: open-match
-    spec:
-      
-      volumes:
-        
-        - name: om-config-volume-default
-          configMap:
-            name: open-match-configmap-default
-        - name: om-config-volume-override
-          configMap:
-            name: open-match-configmap-override
-        
-        
-      serviceAccountName: open-match-unprivileged-service
-      containers:
-      - name: open-match-matchfunction
-        volumeMounts:
-          
-          - name: om-config-volume-default
-            mountPath: /app/config/default
-          - name: om-config-volume-override
-            mountPath: /app/config/override
-          
-          
-        image: "realpvn/open-match-function:latest"
-        ports:
-        - name: grpc
-          containerPort: 50510
-        imagePullPolicy: "IfNotPresent"
-        resources:
-          limits:
-            cpu: 100m
-            memory: 100Mi
-          requests:
-            cpu: 100m
-            memory: 100Mi
-        livenessProbe:
-          httpGet:
-            scheme: HTTP
-            path: /healthz
-            port: 50510
-          initialDelaySeconds: 10
-          periodSeconds: 10
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            scheme: HTTP
-            path: /healthz?readiness=true
-            port: 50510
-          initialDelaySeconds: 10
-          periodSeconds: 10
-          failureThreshold: 2
----
 # Source: open-match/templates/backend.yaml
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
@@ -1574,20 +1461,6 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: open-match-query
-  minReplicas: 1
-  maxReplicas: 10
-  targetCPUUtilizationPercentage: 80
----
-apiVersion: autoscaling/v1
-kind: HorizontalPodAutoscaler
-metadata:
-  name: open-match-matchfunction
-  namespace: open-match
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: open-match-matchfunction
   minReplicas: 1
   maxReplicas: 10
   targetCPUUtilizationPercentage: 80

@@ -42,6 +42,8 @@ import (
 			http://192.168.49.2:30578
 	Copy only IP:PORT and paste it to your endpoint variable like below
 
+	headless service will get a dns like
+	open-match-backend.open-match.svc.cluster.local:50505
 */
 
 func main() {

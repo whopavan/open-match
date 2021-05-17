@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"time"
 
 	"google.golang.org/grpc"
@@ -12,13 +13,16 @@ import (
 )
 
 const (
-	queryServiceAddress = "192.168.49.2:30540" // Address of the QueryService endpoint.
-	serverPort          = 50506                // The port for hosting the Match Function.
-
+	serverPort             = 50502 // The port for hosting the Match Function.
 	ticketsPerPoolPerMatch = 1
 )
 
 func main() {
+	queryServiceAddress, envSet := os.LookupEnv("OPEN_MATCH_QUERY_ENDPOINT")
+	if !envSet {
+		log.Fatalf("Open match env OPEN_MATCH_QUERY_ENDPOINT not set")
+	}
+
 	StartServe(queryServiceAddress, serverPort)
 }
 
