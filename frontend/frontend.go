@@ -45,18 +45,20 @@ import (
 */
 
 func main() {
-	openMatchFrontendEndpoint, nv := os.LookupEnv("OPEN_MATCH_FRONTEND_ENDPOINT")
-	if !nv {
-		log.Fatalf("Open match env not set %v", nv)
+	openMatchFrontendEndpoint, envSet := os.LookupEnv("OPEN_MATCH_FRONTEND_ENDPOINT")
+	if !envSet {
+		log.Fatalf("Open match env OPEN_MATCH_FRONTEND_ENDPOINT not set")
 	}
+
+	log.Printf("front end ip is %v", openMatchFrontendEndpoint)
 
 	// connect to "open match frontend"
 	conn, err := grpc.Dial(openMatchFrontendEndpoint, grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Failed to connect to Open Match, got %v", err)
 	}
-
 	defer conn.Close()
+
 	var (
 		fe  = pb.NewFrontendServiceClient(conn)
 		ctx = context.Background()

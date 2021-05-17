@@ -7,7 +7,7 @@ then
 
     echo "Starting new minikube"
     minikube start --cpus=3 --memory=2500mb
-    eval $(minikube docker-env)
+    # eval $(minikube docker-env)
 
     echo "Starting open-match services"
     kubectl apply --namespace open-match -f ./kuber/01-open-match-core.yaml
@@ -32,7 +32,8 @@ echo "Remove old env variables"
 sed -i '/OPEN_MATCH_QUERY_ENDPOINT/d' ~/.bashrc
 sed -i '/OPEN_MATCH_FRONTEND_ENDPOINT/d' ~/.bashrc
 sed -i '/OPEN_MATCH_BACKEND_ENDPOINT/d' ~/.bashrc
-sed -i '/OPEN_MATCH_MATCHFUNCTION_ENDPOINT/d' ~/.bashrc
+sed -i '/OPEN_MATCH_MATCHFUNCTION_HOSTNAME/d' ~/.bashrc
+sed -i '/OPEN_MATCH_MATCHFUNCTION_HOSTPORT/d' ~/.bashrc
 
 echo "Setting new env"
 query=`minikube service open-match-query --url -n open-match`
@@ -45,10 +46,15 @@ frontend=`echo $frontend | cut -d " " -f1`
 backend=`echo $backend | cut -d " " -f1`
 matchFuntion=`echo $matchFunction | cut -d " " -f1`
 
+matchFunctionHostName=`echo ${matchFunction:7} | cut -d ":" -f1`
+matchFunctionHostPort=`echo ${matchFunction:7} | cut -d ":" -f2`
+
 # we do ${var:7} to cut 7 characters at start of var i.e "http://"
 # so nice="pavanhello", echo ${nice:5} will print "hello"
 echo export OPEN_MATCH_QUERY_ENDPOINT=\"${query:7}\" >> ~/.bashrc
 echo export OPEN_MATCH_FRONTEND_ENDPOINT=\"${frontend:7}\" >> ~/.bashrc
 echo export OPEN_MATCH_BACKEND_ENDPOINT=\"${backend:7}\" >> ~/.bashrc
-echo export OPEN_MATCH_MATCHFUNCTION_ENDPOINT=\"${matchFunction:7}\" >> ~/.bashrc
-. ~/.bashrc
+echo export OPEN_MATCH_MATCHFUNCTION_HOSTNAME=\"${matchFunctionHostName}\" >> ~/.bashrc
+echo export OPEN_MATCH_MATCHFUNCTION_HOSTPORT=\"${matchFunctionHostName}\" >> ~/.bashrc
+
+echo "Please source bashrc manually: source ~/.bashrc"

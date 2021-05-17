@@ -4,19 +4,19 @@ import (
 	"context"
 	"io"
 	"log"
+	"os"
+	"strconv"
 
 	"google.golang.org/grpc"
 	"open-match.dev/open-match/pkg/pb"
 )
 
-var (
-	openMatchBackendEndpoint = "192.168.49.2:31855"
-
-	openMatchMMFHostName = "192.168.0.117"
-	openMatchMMFPort     = int32(50506)
-)
-
 func main() {
+	openMatchBackendEndpoint, envSet := os.LookupEnv("OPEN_MATCH_BACKEND_ENDPOINT")
+	if !envSet {
+		log.Fatalf("Open match env OPEN_MATCH_BACKEND_ENDPOINT not set")
+	}
+
 	conn, err := grpc.Dial(openMatchBackendEndpoint, grpc.WithInsecure())
 	if err != nil {
 		panic(err)
@@ -41,10 +41,26 @@ func main() {
 		},
 	}
 
+	openMatchMMFHostName, envSet := os.LookupEnv("OPEN_MATCH_MATCHFUNCTION_HOSTNAME")
+	if !envSet {
+		log.Fatalf("Open match env OPEN_MATCH_MATCHFUNCTION_HOSTNAME not set")
+	}
+
+	openMatchMMFHostPortStr, envSet := os.LookupEnv("OPEN_MATCH_MATCHFUNCTION_HOSTPORT")
+	if !envSet {
+		log.Fatalf("Open match env OPEN_MATCH_MATCHFUNCTION_HOSTPORT not set")
+	}
+	openMatchMMFHostPort, err := strconv.ParseInt(openMatchMMFHostPortStr, 10, 32)
+	if err != nil {
+		log.Fatalf("Parsing OPEN_MATCH_MATCHFUNCTION_HOSTPORT failed")
+	}
+
+	log.Printf("MMF host %s and port %d", openMatchMMFHostName, openMatchMMFHostPort)
+
 	matchesRequest := pb.FetchMatchesRequest{
 		Config: &pb.FunctionConfig{
 			Host: openMatchMMFHostName,
-			Port: openMatchMMFPort,
+			Port: int32(openMatchMMFHostPort),
 			Type: pb.FunctionConfig_GRPC,
 		},
 		Profile: &matchProfile,
