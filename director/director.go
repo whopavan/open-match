@@ -91,9 +91,9 @@ func main() {
 	log.Printf("tickets present in match %v", tickets)
 	log.Printf("tickets len %v", len(tickets))
 
-	var ticketIDs []string
-	for i := range tickets {
-		ticketIDs[i] = tickets[i].Id
+	ticketIDs := []string{}
+	for _, ticket := range tickets {
+		ticketIDs = append(ticketIDs, ticket.Id)
 	}
 
 	assignTickets := pb.AssignTicketsRequest{

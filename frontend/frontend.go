@@ -63,10 +63,10 @@ func main() {
 		ctx       = context.Background()
 		gameModes = []string{"deathmatch", "competitive", "retake", "spike-rush"}
 
-		requestCount = 5
+		ticketCount = 5
 	)
 
-	for i := 0; i < requestCount; i++ {
+	for i := 0; i < ticketCount; i++ {
 		newTicketRequest := pb.CreateTicketRequest{
 			Ticket: &pb.Ticket{
 				SearchFields: &pb.SearchFields{
