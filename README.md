@@ -21,3 +21,7 @@ Currently it takes one ticket, creates a match (with only one player), assigns f
 6. Source bashrc file
 7. Run frontend, and director. (Match function will run inside kubernetes as a service (refer to the image above) so we do not run it manually, it starts on step 5)
 (Step 1-4 is required only first time after restart/installation of minikube, after that if we want to restart whole open-match pods/service use `./setup` and it should delete old pods/service and start new)
+
+### Bugs
+1. Synchronizer panics because of ulimit (upgrading kernel should fix this, refer to this [github issue](https://github.com/golang/go/issues/37436))
+2. Fetching tickets fail sometimes (probably because of synchronizer ^)
