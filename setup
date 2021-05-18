@@ -48,6 +48,8 @@ echo export OPEN_MATCH_QUERY_ENDPOINT=\"${query:7}\" >> ~/.bashrc
 echo export OPEN_MATCH_FRONTEND_ENDPOINT=\"${frontend:7}\" >> ~/.bashrc
 echo export OPEN_MATCH_BACKEND_ENDPOINT=\"${backend:7}\" >> ~/.bashrc
 
+echo "Starting to add match function to open-match namespace"
+
 read -p "Paste ${query:7} to matchfunction yaml and enter: " proceed
 kubectl apply --namespace open-match -f kuber/10-open-match-matchfunction.yaml
 

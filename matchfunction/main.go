@@ -106,7 +106,7 @@ func StartServe(queryServiceAddr string, serverPort int) {
 	// Connect to QueryService.
 	conn, err := grpc.Dial(queryServiceAddr, grpc.WithInsecure())
 	if err != nil {
-		log.Fatalf("Failed to connect to Open Match, got %s", err.Error())
+		log.Fatalf("Failed to connect to Open Match query, got %s", err.Error())
 	}
 	defer conn.Close()
 

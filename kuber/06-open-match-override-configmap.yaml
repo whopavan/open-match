@@ -48,7 +48,3 @@ data:
         hostname: "open-match-evaluator"
         grpcport: "50508"
         httpport: "51508"
-      frontend:
-          hostname: "open-match-frontend"
-          grpcport: "50504"
-          httpport: "51504"
