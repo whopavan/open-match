@@ -2,7 +2,18 @@
 
 if [ "$1" == "--new" ]
 then
-    echo "Delete old open-match services/pods"
+    status=`minikube status | grep kubelet`
+    if [ `echo ${status:8}` == "Stopped" ]
+    then
+        echo "-> minikube start --cpus=3 --memory=2500mb"
+        echo -e "-> eval \$(minikube docker-env)"
+        echo -e "\nMinikube is not running, start minikube and try again"
+        exit
+    fi
+
+    echo "Minikube is running"
+
+    echo "Deleting any old open-match services/pods"
     kubectl delete psp,clusterrole,clusterrolebinding --selector=release=open-match
     kubectl delete namespace open-match
 
@@ -23,7 +34,6 @@ then
         echo "waiting..."
         sleep 5
     done
-
 fi
 
 echo "Remove old env variables"
@@ -50,7 +60,7 @@ echo export OPEN_MATCH_BACKEND_ENDPOINT=\"${backend:7}\" >> ~/.bashrc
 
 echo "Starting to add match function to open-match namespace"
 
-read -p "Paste ${query:7} to matchfunction yaml and enter: " proceed
+read -p "Paste ${query:7} to matchfunction yaml and enter: " tmp
 kubectl apply --namespace open-match -f kuber/10-open-match-matchfunction.yaml
 
 sleep 5

@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"os"
-	"time"
 
 	"google.golang.org/grpc"
 	"open-match.dev/open-match/pkg/pb"
@@ -52,8 +51,6 @@ func main() {
 		log.Fatalf("Open match env OPEN_MATCH_FRONTEND_ENDPOINT not set")
 	}
 
-	log.Printf("front end ip is %v", openMatchFrontendEndpoint)
-
 	// connect to "open match frontend"
 	conn, err := grpc.Dial(openMatchFrontendEndpoint, grpc.WithInsecure())
 	if err != nil {
@@ -62,32 +59,33 @@ func main() {
 	defer conn.Close()
 
 	var (
-		fe  = pb.NewFrontendServiceClient(conn)
-		ctx = context.Background()
+		fe        = pb.NewFrontendServiceClient(conn)
+		ctx       = context.Background()
+		gameModes = []string{"deathmatch", "competitive", "retake", "spike-rush"}
+
+		requestCount = 5
 	)
 
-	// Below block should be automatically sent by a script or some sort
-	newTicketRequest := pb.CreateTicketRequest{
-		Ticket: &pb.Ticket{
-			SearchFields: &pb.SearchFields{
-				Tags: []string{"deathmatch"},
+	for i := 0; i < requestCount; i++ {
+		newTicketRequest := pb.CreateTicketRequest{
+			Ticket: &pb.Ticket{
+				SearchFields: &pb.SearchFields{
+					Tags: []string{gameModes[0]},
+				},
 			},
-			Id: "1234",
-		},
+		}
+		log.Printf("Ticket: %v", &newTicketRequest)
+
+		ticket, err := fe.CreateTicket(ctx, &newTicketRequest)
+		if err != nil {
+			log.Printf("Failed to Create Ticket, got %s", err.Error())
+		}
+
+		log.Printf("Ticket ID: %v", ticket.Id)
+
+		// This go routine watches for ticket assignment, once assigned deletes the ticket
+		go deleteTicketPostAssignment(ctx, fe, ticket)
 	}
-	// ------------------------------------------------------------------
-
-	ticket, err := fe.CreateTicket(ctx, &newTicketRequest)
-	if err != nil {
-		log.Printf("Failed to Create Ticket, got %s", err.Error())
-	}
-
-	log.Printf("Ticket created successfully for user id %v", ticket.Id)
-
-	// This go routine watches for ticket assignment, once assigned deletes the ticket
-	go deleteTicketPostAssignment(ctx, fe, ticket)
-
-	time.Sleep(3 * time.Second)
 }
 
 func deleteTicketPostAssignment(ctx context.Context, fe pb.FrontendServiceClient, t *pb.Ticket) {

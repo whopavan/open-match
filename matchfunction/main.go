@@ -13,11 +13,11 @@ import (
 )
 
 const (
-	serverPort             = 50502 // The port for hosting the Match Function.
-	ticketsPerPoolPerMatch = 1
+	serverPort = 50502 // The port for hosting the Match Function.
 )
 
 func main() {
+	// Required to query for tickets
 	queryServiceAddress, envSet := os.LookupEnv("OPEN_MATCH_QUERY_ENDPOINT")
 	if !envSet {
 		log.Fatalf("Open match env OPEN_MATCH_QUERY_ENDPOINT not set")
@@ -29,9 +29,9 @@ func main() {
 // MatchFunctionService implements pb.MatchFunctionServer, the server generated
 // by compiling the protobuf, by fulfilling the pb.MatchFunctionServer interface.
 type MatchFunctionService struct {
-	grpc               *grpc.Server
+	// grpc               *grpc.Server
 	queryServiceClient pb.QueryServiceClient
-	port               int
+	// port               int
 }
 
 // Run is this match function's implementation of the gRPC call defined in api/matchfunction.proto.
@@ -60,12 +60,14 @@ func (s *MatchFunctionService) Run(req *pb.RunRequest, stream pb.MatchFunction_R
 			return err
 		}
 	}
-
 	return nil
 }
 
+// Main match making function
 func makeMatches(p *pb.MatchProfile, poolTickets map[string][]*pb.Ticket) ([]*pb.Match, error) {
+	ticketsPerPoolPerMatch := 2
 	var matches []*pb.Match
+
 	count := 0
 	for {
 		insufficientTickets := false
@@ -95,7 +97,6 @@ func makeMatches(p *pb.MatchProfile, poolTickets map[string][]*pb.Ticket) ([]*pb
 
 		count++
 	}
-
 	return matches, nil
 }
 
@@ -117,6 +118,7 @@ func StartServe(queryServiceAddr string, serverPort int) {
 	// Create and host a new gRPC service on the configured port.
 	server := grpc.NewServer()
 	pb.RegisterMatchFunctionServer(server, &mmfService)
+
 	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", serverPort))
 	if err != nil {
 		log.Fatalf("TCP net listener initialization failed for port %v, got %s", serverPort, err.Error())

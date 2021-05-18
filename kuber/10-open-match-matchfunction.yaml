@@ -82,7 +82,7 @@ spec:
         image: "realpvn/open-match-function:latest"
         env:
         - name: OPEN_MATCH_QUERY_ENDPOINT
-          value: "192.168.49.2:31338"
+          value: "192.168.49.2:30699"
         ports:
         - name: grpc
           containerPort: 50502
